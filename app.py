@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 from ultralytics import YOLO
 import tempfile, os, time, io
-import gdown
+import urllib.request
 
 # ── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -37,9 +37,10 @@ st.markdown("""
 # ── Download & Load Model ─────────────────────────────────────────────────────
 @st.cache_resource
 def load_model():
+    # If the model file isn't present, download from Hugging Face
     if not os.path.exists("best.pt"):
-        url = "https://drive.google.com/uc?id=1VqtkLrpMZuj61Z3nyijYi9cKev1gABzC"
-        gdown.download(url, "best.pt", quiet=False)
+        url = "https://huggingface.co/justlikethat06/helmet-model/resolve/main/best.pt"
+        urllib.request.urlretrieve(url, "best.pt")
     return YOLO("best.pt")
 
 # ── Helper ────────────────────────────────────────────────────────────────────
@@ -61,7 +62,7 @@ with st.sidebar:
     mode = st.radio("Detection Mode", ["📷 Image","🎥 Video"])
     conf = st.slider("Confidence Threshold", 0.1, 0.95, 0.4, 0.05)
 
-# ── Load model ────────────────────────────────────────────────────────────────
+# ── Load model ─────────────────────────────────────────────────────────────────
 try:
     model = load_model()
     st.sidebar.success("✅ Model loaded!")
@@ -74,7 +75,6 @@ except Exception as e:
 # ══════════════════════════════════════════════════════════════════════════════
 if mode == "📷 Image":
     st.subheader("📷 Image Detection")
-
     uploaded = st.file_uploader("Choose an image", type=["jpg","jpeg","png","bmp","webp"])
 
     if uploaded:
@@ -83,7 +83,7 @@ if mode == "📷 Image":
 
         col1, col2 = st.columns(2)
         with col1:
-            st.image(img, caption="Original", use_container_width=True)
+            st.image(img, caption="Original Image", use_container_width=True)
 
         with col2:
             with st.spinner("Running detection..."):
@@ -93,9 +93,10 @@ if mode == "📷 Image":
         st.markdown("---")
         st.metric("🟢 With Helmet", helmet)
         st.metric("🔴 Without Helmet", nohelmet)
+        st.metric("👥 Total Detected", helmet + nohelmet)
 
         if nohelmet > 0:
-            st.error(f"⚠ {nohelmet} person(s) without helmet detected!")
+            st.error(f"⚠️ {nohelmet} person(s) without helmet!")
         else:
             st.success("✅ All clear!")
 
@@ -104,16 +105,14 @@ if mode == "📷 Image":
 # ══════════════════════════════════════════════════════════════════════════════
 elif mode == "🎥 Video":
     st.subheader("🎥 Video Detection")
-
     uploaded = st.file_uploader("Choose a video", type=["mp4","avi","mov","mkv"])
 
     if uploaded:
-        tfile = tempfile.NamedTemporaryFile(delete=False)
+        tfile = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
         tfile.write(uploaded.read())
         tfile.close()
 
         cap = cv2.VideoCapture(tfile.name)
-
         stframe = st.empty()
 
         while cap.isOpened():
