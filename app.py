@@ -1,4 +1,7 @@
 import streamlit as st
+import os
+os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "0"
+
 import cv2
 import numpy as np
 from PIL import Image
@@ -6,6 +9,7 @@ from ultralytics import YOLO
 import tempfile, os, time, io
 import urllib.request
 
+os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "0"
 # ── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Helmet Detection System",
