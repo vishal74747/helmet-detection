@@ -1,5 +1,5 @@
-streamlit
-ultralytics
+streamlit==1.55.0
+ultralytics==8.4.22
 torch
 opencv-python-headless
 pillow
